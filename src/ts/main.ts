@@ -40,6 +40,7 @@ let vertNames: string[] = [];
 let params: string[] = [];
 let matrixInputs: Map<[string, string], number> = new Map();
 let nodes: TreeNode[] = [];
+let formulaParams: number[] = [];
 
 // page1
 (function numOfVertexes(): void {
@@ -79,8 +80,8 @@ function paramInp(): void {
 
 		div1.innerHTML += `Название вершины `;
 		div1.appendChild(inp1);
-		div1.innerHTML += ` Коэффициент эластичности вершины `;
-		div1.appendChild(inp2);
+		// div1.innerHTML += ` Коэффициент эластичности вершины `;
+		// div1.appendChild(inp2);
 
 		document.body.appendChild(div1);
 
@@ -96,17 +97,19 @@ function paramInp(): void {
 
 				vertNames.push(inp.value);
 
-			} else if (inp.id == "coefficient") {
-
-				params.push(inp.value);
-
 			}
+			// else if (inp.id == "coefficient") {
+
+			// 	params.push(inp.value);
+
+			// }
 
 		});
 
 		for (let i: number = 0; i < vertNames.length; ++i) {
 			let node1: TreeNode = new TreeNode(vertNames[i]);
-			node1.paramName = params[i];
+
+			// node1.paramName = params[i];
 
 			nodes.push(node1);
 		}
@@ -158,6 +161,7 @@ function matrix(): void {
 	but1.addEventListener("click", (e: Event): void => {
 
 		let count: number = 0;
+		let rootNode: boolean = true;
 		document.body.querySelectorAll("input").forEach((inp) => {
 			if (inp.type != "text")
 				return;
@@ -170,16 +174,19 @@ function matrix(): void {
 				return;
 			}
 
-			if (nodes[row].parent == null && inp.value === "1")
-				nodes[row].parent = nodes[col];
-			else if (inp.value === "1") {
-				if (nodes[row].child1 == null)
+			if (inp.value == "1") {
+				if (nodes[row].child1 == null) {
+
 					nodes[row].child1 = nodes[col];
-				else
+					nodes[col].parent = nodes[row];
+				}
+				else if (nodes[row].child2 == null) {
+
 					nodes[row].child2 = nodes[col];
+					nodes[col].parent = nodes[row];
+				}
 			}
 
-			matrixInputs.set([row.toString(), col.toString()], inp.value === "" ? 0 : parseInt(inp.value));
 			count++;
 		});
 
@@ -191,37 +198,47 @@ function matrix(): void {
 
 // page 4
 function coef(): void {
-	document.body.innerHTML += `
-	<p>Введите коэффициенты эластичности</p>
-	`;
+	let table1: HTMLTableElement = document.createElement("table");
+	for (let i: number = 0; i < 2; ++i) {
+		let tr1: HTMLTableRowElement = document.createElement("tr");
+		for (let j: number = 0; j < 4; ++j) {
 
-	let count: number = -1;
-	params.forEach(par => {
+			let td1: HTMLTableCellElement = document.createElement("td");
 
-		count++;
+			// if (i == 0 && j == 0) {
+			// 	tr1.appendChild(td1);
+			// 	continue;
+			// }
 
-		if (par == "")
-			return;
+			if (i == 0 && j == 0) {
+				td1.innerText = `Объем продаж`;
+				tr1.appendChild(td1);
+				continue;
+			} else if (i == 0 && j == 1) {
+				td1.innerText = `Цена`;
+				tr1.appendChild(td1);
+				continue;
+			} else if (i == 0 && j == 2) {
+				td1.innerText = `Постоянные издержки`;
+				tr1.appendChild(td1);
+				continue;
+			} else if (i == 0 && j == 3) {
+				td1.innerText = `Переменные издержки`;
+				tr1.appendChild(td1);
+				continue;
+			}
 
-		nodes[count].paramName = par;
 
-		let div1: HTMLDivElement = document.createElement("div");
-		let inp1: HTMLInputElement = document.createElement("input");
-		inp1.type = "text";
-		let inp2: HTMLInputElement = document.createElement("input");
-		inp2.type = "text";
+			let inp1: HTMLInputElement = document.createElement("input");
 
-		inp1.classList.add(`${nodes[count].paramName}`);
-		inp2.classList.add(`${nodes[count].paramName}`);
+			td1.appendChild(inp1);
+			tr1.appendChild(td1);
+		}
 
-		div1.innerHTML += `${par}(1) `;
-		div1.appendChild(inp1);
-		div1.innerHTML += `${par}(2) `;
-		div1.appendChild(inp2);
+		table1.appendChild(tr1);
+	}
 
-		document.body.appendChild(div1);
-	});
-
+	document.body.appendChild(table1);
 
 	let but1: HTMLInputElement = document.createElement("input");
 	but1.type = "button";
@@ -230,134 +247,82 @@ function coef(): void {
 
 		let count: number = 0;
 		document.body.querySelectorAll("input").forEach((inp) => {
-			nodes.forEach(node => {
-				if (node.paramName != null && node.paramName == inp.className) {
-					if (node.kParam1 == null)
-						node.kParam1 = parseInt(inp.value);
-					else
-						node.kParam2 = parseInt(inp.value);
-				}
-			});
+			formulaParams.push(parseInt(inp.value));
+			count++;
 		});
-
-		console.log(nodes);
 
 		clearPage();
 		makeTree();
 	});
 	document.body.appendChild(but1);
+	// document.body.innerHTML += `
+	// <p>Введите коэффициенты эластичности</p>
+	// `;
+
+	// let count: number = -1;
+	// params.forEach(par => {
+
+	// 	count++;
+
+	// 	if (par == "")
+	// 		return;
+
+	// 	nodes[count].paramName = par;
+
+	// 	let div1: HTMLDivElement = document.createElement("div");
+	// 	let inp1: HTMLInputElement = document.createElement("input");
+	// 	inp1.type = "text";
+	// 	let inp2: HTMLInputElement = document.createElement("input");
+	// 	inp2.type = "text";
+
+	// 	inp1.classList.add(`${nodes[count].paramName}`);
+	// 	inp2.classList.add(`${nodes[count].paramName}`);
+
+	// 	div1.innerHTML += `${par}(1) `;
+	// 	div1.appendChild(inp1);
+	// 	div1.innerHTML += `${par}(2) `;
+	// 	div1.appendChild(inp2);
+
+	// 	document.body.appendChild(div1);
+	// });
+
+
+	// let but1: HTMLInputElement = document.createElement("input");
+	// but1.type = "button";
+	// but1.value = "Далее";
+	// but1.addEventListener("click", (e: Event): void => {
+
+	// 	let count: number = 0;
+	// 	document.body.querySelectorAll("input").forEach((inp) => {
+	// 		nodes.forEach(node => {
+	// 			if (node.paramName != null && node.paramName == inp.className) {
+	// 				if (node.kParam1 == null)
+	// 					node.kParam1 = parseInt(inp.value);
+	// 				else
+	// 					node.kParam2 = parseInt(inp.value);
+	// 			}
+	// 		});
+	// 	});
+
+	// 	console.log(nodes);
+
+	// 	clearPage();
+	// 	makeTree();
+	// });
+	// document.body.appendChild(but1);
 }
 
 function makeTree(): void {
 
-	let treeData: any =
-	{
-
-		nodeStructure: {
-			text: { name: `ea` },
-			children: [
-				{
-					text: { name: `s` },
-				},
-				{
-					text: { name: `se` }
-				}
-			]
-		}
-
-	};
-
-	treeConfig = {
-		chart: {
-			container: "#basic-example",
-
-			connectors: {
-				type: 'step'
-			},
-			node: {
-				HTMLclass: 'nodeExample1'
-			}
-		},
-		nodeStructure: {
-			text: {
-				name: "Mark Hill",
-				title: "Chief executive officer",
-				contact: "Tel: 01 213 123 134",
-			},
-			children: [
-				{
-					text: {
-						name: "Joe Linux",
-						title: "Chief Technology Officer",
-					},
-					stackChildren: true,
-					children: [
-						{
-							text: {
-								name: "Ron Blomquist",
-								title: "Chief Information Security Officer"
-							},
-						},
-						{
-							text: {
-								name: "Michael Rubin",
-								title: "Chief Innovation Officer",
-								contact: "we@aregreat.com"
-							},
-						}
-					]
-				},
-				{
-					stackChildren: true,
-					text: {
-						name: "Linda May",
-						title: "Chief Business Officer",
-					},
-					children: [
-						{
-							text: {
-								name: "Alice Lopez",
-								title: "Chief Communications Officer"
-							},
-						},
-						{
-							text: {
-								name: "Mary Johnson",
-								title: "Chief Brand Officer"
-							},
-						},
-						{
-							text: {
-								name: "Kirk Douglas",
-								title: "Chief Business Development Officer"
-							},
-						}
-					]
-				},
-				{
-					text: {
-						name: "John Green",
-						title: "Chief accounting officer",
-						contact: "Tel: 01 213 123 134",
-					},
-					children: [
-						{
-							text: {
-								name: "Erica Reel",
-								title: "Chief Customer Officer"
-							},
-						}
-					]
-				}
-			]
-		}
-	};
 
 	let chartDiv: HTMLDivElement = document.createElement("div");
 	chartDiv.classList.add("chart");
 	chartDiv.id = "basic-example";
+	chartDiv.style.width = "1024px";;
+	chartDiv.style.height = "1024px";
+
 	document.body.appendChild(chartDiv);
 
 
-	visualize();
+	visualize(nodes);
 }
