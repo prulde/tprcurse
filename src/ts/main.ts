@@ -21,8 +21,9 @@ class TreeNode {
 	public child1: TreeNode | null = null;
 	public child2: TreeNode | null = null;
 	public paramName: string | null = null;
-	public kParam1: number | null = null;
-	public kParam2: number | null = null;
+	public volume: number | null = null;
+	public coeff: number | null = null;
+	public profit: number | null = null;
 
 	constructor(name: string) {
 		this.name = name;
@@ -38,9 +39,11 @@ class TreeNode {
 
 let vertNames: string[] = [];
 let params: string[] = [];
-let matrixInputs: Map<[string, string], number> = new Map();
 let nodes: TreeNode[] = [];
 let formulaParams: number[] = [];
+let formulaParamNames: string[] = [];
+let resultCoef: number[] = [];
+let volume: number[] = [];
 
 // page1
 (function numOfVertexes(): void {
@@ -74,14 +77,22 @@ function paramInp(): void {
 		let inp2: HTMLInputElement = document.createElement("input");
 		inp2.type = "text";
 		inp2.id = "coefficient";
+		let inp3: HTMLInputElement = document.createElement("input");
+		inp3.type = "text";
+		inp3.id = "volume";
 		div1.innerHTML = `
 	<p>Параметры вершины №${i + 1}:</p>
 	`;
 
 		div1.innerHTML += `Название вершины `;
 		div1.appendChild(inp1);
-		// div1.innerHTML += ` Коэффициент эластичности вершины `;
-		// div1.appendChild(inp2);
+
+		//comment
+		div1.innerHTML += ` Название параметра `; //Коэффициент эластичности вершины
+		div1.appendChild(inp2);
+
+		div1.innerHTML += ` Процент прироста `;
+		div1.appendChild(inp3);
 
 		document.body.appendChild(div1);
 
@@ -98,18 +109,27 @@ function paramInp(): void {
 				vertNames.push(inp.value);
 
 			}
-			// else if (inp.id == "coefficient") {
+			//comment
+			else if (inp.id == "coefficient") {
 
-			// 	params.push(inp.value);
+				params.push(inp.value);
 
-			// }
+			}
+
+			else if (inp.id == "volume") {
+
+				volume.push(parseInt(inp.value));
+
+			}
 
 		});
 
 		for (let i: number = 0; i < vertNames.length; ++i) {
 			let node1: TreeNode = new TreeNode(vertNames[i]);
 
-			// node1.paramName = params[i];
+			//comment
+			node1.paramName = params[i];
+			node1.volume = volume[i];
 
 			nodes.push(node1);
 		}
@@ -211,19 +231,23 @@ function coef(): void {
 			// }
 
 			if (i == 0 && j == 0) {
-				td1.innerText = `Объем продаж`;
+				td1.innerText = `Объем`;
+				formulaParamNames.push(`Объем`);
 				tr1.appendChild(td1);
 				continue;
 			} else if (i == 0 && j == 1) {
 				td1.innerText = `Цена`;
+				formulaParamNames.push(`Цена`);
 				tr1.appendChild(td1);
 				continue;
 			} else if (i == 0 && j == 2) {
 				td1.innerText = `Постоянные издержки`;
+				formulaParamNames.push(`Постоянные издержки`);
 				tr1.appendChild(td1);
 				continue;
 			} else if (i == 0 && j == 3) {
 				td1.innerText = `Переменные издержки`;
+				formulaParamNames.push(`Переменные издержки`);
 				tr1.appendChild(td1);
 				continue;
 			}
@@ -247,9 +271,48 @@ function coef(): void {
 
 		let count: number = 0;
 		document.body.querySelectorAll("input").forEach((inp) => {
+			if (inp.type != "text")
+				return;
 			formulaParams.push(parseInt(inp.value));
 			count++;
 		});
+
+		for (let i = 0; i < formulaParams.length; ++i) {
+			nodes.forEach(node => {
+				if (formulaParamNames[i] == node.paramName) {
+					if (node.paramName == `Объем`) {
+						let temp = formulaParams[0] / 100 * (!node.volume ? 10 : node.volume);
+						let profitBefore = (formulaParams[0] * formulaParams[1]) - (formulaParams[2] + (formulaParams[3] * formulaParams[0]));
+						let profitAfter = ((formulaParams[0] + temp) * formulaParams[1]) - (formulaParams[2] + (formulaParams[3] * (formulaParams[0] + temp)));
+						node.profit = profitAfter - profitBefore;
+						node.coeff = Math.round(Math.abs(node.profit / profitBefore) * 100);//((node.profit / temp) * (formulaParams[0] / profitBefore));
+					}
+					if (node.paramName == `Цена`) {
+						let temp = formulaParams[1] / 100 * (!node.volume ? 10 : node.volume);
+						let profitBefore = (formulaParams[0] * formulaParams[1]) - (formulaParams[2] + (formulaParams[3] * formulaParams[0]));
+						let profitAfter = (formulaParams[0] * (formulaParams[1] + temp)) - (formulaParams[2] + (formulaParams[3] * formulaParams[0]));
+						node.profit = profitAfter - profitBefore;
+						node.coeff = Math.round(Math.abs(node.profit / profitBefore) * 100);//((node.profit / temp) * (formulaParams[1] / profitBefore));
+					}
+					if (node.paramName == `Постоянные издержки`) {
+						let temp = formulaParams[2] / 100 * (!node.volume ? 10 : node.volume);
+						let profitBefore = (formulaParams[0] * formulaParams[1]) - (formulaParams[2] + (formulaParams[3] * formulaParams[0]));
+						let profitAfter = (formulaParams[0] * formulaParams[1]) - (formulaParams[2] - temp + (formulaParams[3] * formulaParams[0]));
+						node.profit = profitAfter - profitBefore;
+						node.coeff = Math.round(Math.abs(node.profit / profitBefore) * 100); //((node.profit / temp) * (formulaParams[2] / profitBefore));
+					}
+					if (node.paramName == `Переменные издержки`) {
+						let temp = formulaParams[3] / 100 * (!node.volume ? 10 : node.volume);
+						let profitBefore = (formulaParams[0] * formulaParams[1]) - (formulaParams[2] + (formulaParams[3] * formulaParams[0]));
+						let profitAfter = (formulaParams[0] * formulaParams[1]) - (formulaParams[2] + ((formulaParams[3] - temp) * formulaParams[0]));
+						node.profit = profitAfter - profitBefore;
+						node.coeff = Math.round(Math.abs(node.profit / profitBefore) * 100); //((node.profit / temp) * (formulaParams[3] / profitBefore));
+					}
+
+				}
+
+			});
+		}
 
 		clearPage();
 		makeTree();
@@ -319,10 +382,10 @@ function makeTree(): void {
 	chartDiv.classList.add("chart");
 	chartDiv.id = "basic-example";
 	chartDiv.style.width = "1024px";;
-	chartDiv.style.height = "1024px";
+	chartDiv.style.height = "512";
 
 	document.body.appendChild(chartDiv);
 
 
-	visualize(nodes);
+	visualize(nodes, formulaParams);
 }
